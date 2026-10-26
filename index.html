@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fuel Log — Fuel, at a glance</title>
+<style>
+:root{--bg:#f6f7f5;--card:#fff;--ink:#18221f;--muted:#75807b;--line:#e8ece8;--green:#177b60;--green2:#e6f3ed;--red:#b94d4d;--shadow:0 8px 28px #17241b08}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:1100px;margin:auto;padding:34px 24px 60px}.top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:28px}
+.brand{display:flex;align-items:center;gap:12px}.mark{width:46px;height:46px;border-radius:15px;background:var(--green2);display:grid;place-items:center;color:var(--green);font-size:23px}
+h1{font-size:23px;letter-spacing:-.7px;margin:0}.sub{font-size:12px;color:var(--muted);letter-spacing:1.1px}
+button,.filebtn{font:inherit;border:0;cursor:pointer;border-radius:11px;padding:11px 16px;background:var(--green);color:white;font-weight:650;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+button:hover,.filebtn:hover{filter:brightness(.96)}button.secondary{background:#eef1ee;color:var(--ink)}button.danger{background:#faeeee;color:var(--red)}button.small{padding:7px 10px;font-size:12px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:13px;margin-bottom:16px}.panel,.stat{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow)}
+.stat{padding:19px 20px}.eyebrow{font-size:12px;color:var(--muted);margin-bottom:8px}.metric{font-size:27px;letter-spacing:-1px;font-weight:720}.metricfoot{font-size:12px;color:var(--muted);margin-top:4px}
+.charts{display:grid;grid-template-columns:1.35fr 1fr;gap:14px;margin-bottom:16px}.panel{padding:20px}.panelhead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}.panel h2{font-size:15px;margin:0;letter-spacing:-.2px}.pill{background:#f1f4f1;color:#68756d;border-radius:999px;padding:5px 9px;font-size:11px}
+canvas{width:100%;height:225px;display:block}.chart-empty{height:225px;display:grid;place-items:center;text-align:center;color:var(--muted);font-size:13px}
+.lower{display:grid;grid-template-columns:1fr;gap:14px}.tabletop{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}.tools{display:flex;gap:8px;align-items:center}input,select{font:inherit;background:#fff;border:1px solid #dfe5df;border-radius:10px;padding:10px 11px;min-width:0;color:var(--ink)}input:focus,select:focus{outline:2px solid #b9dfcd;border-color:var(--green)}.tablewrap{overflow:auto}table{border-collapse:collapse;width:100%;white-space:nowrap}th{text-align:left;color:var(--muted);font-size:11px;font-weight:650;text-transform:uppercase;letter-spacing:.6px;padding:11px 12px;border-bottom:1px solid var(--line)}td{padding:13px 12px;border-bottom:1px solid #eff2ef;font-size:13px}tbody tr:last-child td{border-bottom:0}.right{text-align:right}.station{font-weight:650}.subcell{font-size:11px;color:var(--muted)}.empty{text-align:center;padding:35px;color:var(--muted);font-size:13px}
+footer{margin-top:20px;display:flex;justify-content:space-between;gap:14px;color:var(--muted);font-size:11px}
+dialog{border:0;border-radius:20px;padding:0;width:min(520px,calc(100% - 28px));box-shadow:0 24px 90px #101d1860}dialog::backdrop{background:#14201c66;backdrop-filter:blur(3px)}.modal{padding:23px}.modalhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}.modalhead h2{margin:0;font-size:19px}.x{background:transparent;color:var(--muted);font-size:24px;padding:0 5px}.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:13px}.field{display:flex;flex-direction:column;gap:6px}.field label{font-size:12px;font-weight:650;color:#536058}.field.full{grid-column:1/-1}.hint{font-size:11px;color:var(--muted)}.modalactions{display:flex;justify-content:flex-end;gap:8px;margin-top:20px}.computed{background:#f3f7f3;border-radius:11px;padding:12px;font-size:13px;color:var(--muted)}.computed b{color:var(--ink)}
+@media(max-width:800px){.stats{grid-template-columns:repeat(2,1fr)}.charts{grid-template-columns:1fr}.metric{font-size:24px}main{padding:22px 14px 40px}.top{align-items:flex-start}.sub{font-size:10px}.tabletop{align-items:flex-start;flex-direction:column}.tools{width:100%;flex-wrap:wrap}.tools input{flex:1;min-width:120px}}
+@media(max-width:450px){.formgrid{grid-template-columns:1fr}.field.full{grid-column:auto}.stats{gap:9px}.stat{padding:14px}.metric{font-size:21px}.panel{padding:15px}.top button{padding:10px 12px}}
+</style>
+</head>
+<body><main>
+<header class="top">
+ <div class="brand"><div class="mark">⛽</div><div><h1>Fuel Log</h1><div class="sub">YOUR FUEL, AT A GLANCE</div></div></div>
+ <button id="addBtn">＋ Add fill-up</button>
+</header>
+<section class="stats">
+ <article class="stat"><div class="eyebrow">Total spent</div><div class="metric" id="spent">$0.00</div><div class="metricfoot" id="spentFoot">Across all fill-ups</div></article>
+ <article class="stat"><div class="eyebrow">Avg. price / gal</div><div class="metric" id="avgPrice">—</div><div class="metricfoot">Weighted by gallons</div></article>
+ <article class="stat"><div class="eyebrow">Gallons purchased</div><div class="metric" id="gallons">0.0</div><div class="metricfoot">Lifetime total</div></article>
+ <article class="stat"><div class="eyebrow">Fill-ups</div><div class="metric" id="count">0</div><div class="metricfoot" id="mpgFoot">Add odometer readings for MPG</div></article>
+</section>
+<section class="charts">
+ <article class="panel"><div class="panelhead"><h2>Fuel price history</h2><span class="pill">Price per gallon</span></div><canvas id="priceChart" aria-label="Fuel price history chart"></canvas><div id="priceEmpty" class="chart-empty">Log a few fill-ups to see your fuel price trend.</div></article>
+ <article class="panel"><div class="panelhead"><h2>Spending by month</h2><span class="pill">USD</span></div><canvas id="spendChart" aria-label="Monthly fuel spending chart"></canvas><div id="spendEmpty" class="chart-empty">Your monthly spending will appear here.</div></article>
+</section>
+<section class="lower"><article class="panel">
+ <div class="tabletop"><div><h2 style="margin:0 0 3px">Fill-up history</h2><div class="sub" style="letter-spacing:0">Your saved fuel records</div></div>
+ <div class="tools"><input id="search" placeholder="Search station…" aria-label="Search station"><select id="period" aria-label="Filter by time"><option value="all">All time</option><option value="year">This year</option><option value="month">This month</option></select><button class="secondary" id="exportBtn">↓ Export CSV</button><label class="filebtn" for="importFile" style="background:#eef1ee;color:var(--ink);font-size:13px">↑ Import</label><input id="importFile" type="file" accept=".csv,text/csv" hidden></div>
+ </div>
+ <div class="tablewrap"><table><thead><tr><th>Date</th><th>Station</th><th class="right">Gallons</th><th class="right">$/gal</th><th class="right">Total</th><th class="right">Odometer</th><th></th></tr></thead><tbody id="records"></tbody></table><div id="empty" class="empty">No fill-ups yet. Add your first fuel log to get started.</div></div>
+ </article></section>
+ <footer><span>Saved in this browser on this device.</span><span>Export a CSV regularly to keep a backup.</span></footer>
+</main>
+<dialog id="entryDialog"><form id="entryForm" class="modal">
+ <div class="modalhead"><h2 id="modalTitle">Add fill-up</h2><button type="button" class="x" id="closeDialog" aria-label="Close">×</button></div>
+ <input type="hidden" id="entryId">
+ <div class="formgrid">
+  <div class="field"><label for="date">Date *</label><input type="date" id="date" required></div>
+  <div class="field"><label for="station">Station</label><input id="station" placeholder="e.g. Costco, Shell"></div>
+  <div class="field"><label for="gallonsInput">Gallons *</label><input id="gallonsInput" type="number" min=".001" step=".001" placeholder="10.25" required></div>
+  <div class="field"><label for="priceInput">Price per gallon ($) *</label><input id="priceInput" type="number" min="0" step=".001" placeholder="2.899" required></div>
+  <div class="field full"><label for="odo">Odometer (miles, optional)</label><input id="odo" type="number" min="0" step=".1" placeholder="e.g. 14,520"><span class="hint">Enter odometer readings consistently to estimate fuel efficiency.</span></div>
+  <div class="field full"><label for="notes">Notes (optional)</label><input id="notes" placeholder="Grade, location, etc."></div>
+  <div class="field full computed" id="totalPreview">Fill-up total: <b>$0.00</b></div>
+ </div>
+ <div class="modalactions"><button type="button" class="secondary" id="cancelBtn">Cancel</button><button type="submit">Save fill-up</button></div>
+</form></dialog>
+<script>
+const KEY='fuel-log-records-v1';
+let logs=[];try{logs=JSON.parse(localStorage.getItem(KEY)||'[]')}catch{}
+const $=id=>document.getElementById(id);
+const money=n=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(n||0);
+const gallonsFmt=n=>(+n||0).toFixed(2);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const save=()=>localStorage.setItem(KEY,JSON.stringify(logs));
+const sorted=()=>[...logs].sort((a,b)=>a.date.localeCompare(b.date)||a.id.localeCompare(b.id));
+function visibleLogs(){let list=[...logs],q=$('search').value.toLowerCase().trim(),p=$('period').value,now=new Date();if(p==='year')list=list.filter(x=>x.date.slice(0,4)===String(now.getFullYear()));if(p==='month')list=list.filter(x=>x.date.slice(0,7)===now.toISOString().slice(0,7));if(q)list=list.filter(x=>(x.station||'').toLowerCase().includes(q)||(x.notes||'').toLowerCase().includes(q));return list.sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id))}
+function render(){const total=logs.reduce((s,x)=>s+x.total,0),gal=logs.reduce((s,x)=>s+x.gallons,0);$('spent').textContent=money(total);$('spentFoot').textContent=`${logs.length} saved fill-up${logs.length===1?'':'s'}`;$('avgPrice').textContent=gal?money(total/gal):'—';$('gallons').textContent=gallonsFmt(gal);$('count').textContent=logs.length;
+ const withOdo=sorted().filter(x=>Number.isFinite(x.odo));let mpgs=[];for(let i=1;i<withOdo.length;i++){let miles=withOdo[i].odo-withOdo[i-1].odo;if(miles>0&&withOdo[i].gallons>0)mpgs.push(miles/withOdo[i].gallons)}$('mpgFoot').textContent=mpgs.length?`Est. ${ (mpgs.reduce((a,b)=>a+b,0)/mpgs.length).toFixed(1)} MPG avg.`:'Add odometer readings for MPG';
+ const rows=visibleLogs();$('records').innerHTML=rows.map(x=>`<tr><td>${esc(new Date(x.date+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}))}</td><td><div class="station">${esc(x.station||'Unspecified')}</div>${x.notes?`<div class="subcell">${esc(x.notes)}</div>`:''}</td><td class="right">${gallonsFmt(x.gallons)}</td><td class="right">${money(x.price)}</td><td class="right"><b>${money(x.total)}</b></td><td class="right">${x.odo!=null?Number(x.odo).toLocaleString():'—'}</td><td class="right"><button class="secondary small" data-edit="${esc(x.id)}">Edit</button> <button class="danger small" data-delete="${esc(x.id)}" aria-label="Delete entry">×</button></td></tr>`).join('');$('empty').style.display=rows.length?'none':'block';$('empty').textContent=logs.length?'No matching fill-ups.':'No fill-ups yet. Add your first fuel log to get started.';
+ drawCharts()}
+function draw(canvasId,emptyId,values,kind){const canvas=$(canvasId),ctx=canvas.getContext('2d'),wrap=canvas.parentElement,empty=$(emptyId);let rect=canvas.getBoundingClientRect(),dpr=window.devicePixelRatio||1;canvas.width=Math.max(1,rect.width*dpr);canvas.height=225*dpr;ctx.scale(dpr,dpr);ctx.clearRect(0,0,rect.width,225);if(!values.length){canvas.style.display='none';empty.style.display='grid';return}canvas.style.display='block';empty.style.display='none';let w=rect.width,h=225,pad={l:42,r:12,t:16,b:30},cw=w-pad.l-pad.r,ch=h-pad.t-pad.b;
+ let nums=values.map(v=>v.y),min=Math.min(...nums),max=Math.max(...nums);if(kind==='price'){min=Math.max(0,min-(max-min||.15)*.22);max=max+(max-min||.15)*.22}else{min=0;max=max*1.16||1}const y=v=>pad.t+ch-(v-min)/(max-min||1)*ch;
+ ctx.font='11px system-ui';ctx.fillStyle='#8a948e';ctx.strokeStyle='#e9eeea';ctx.lineWidth=1;for(let i=0;i<4;i++){let v=min+(max-min)*i/3,yy=y(v);ctx.beginPath();ctx.moveTo(pad.l,yy);ctx.lineTo(w-pad.r,yy);ctx.stroke();ctx.textAlign='right';ctx.fillText(kind==='price'?'$'+v.toFixed(2):'$'+Math.round(v),pad.l-8,yy+4)}
+ const step=cw/Math.max(1,values.length-1);
+ if(kind==='price'){ctx.beginPath();values.forEach((v,i)=>{let xx=pad.l+step*i;if(i===0)ctx.moveTo(xx,y(v.y));else ctx.lineTo(xx,y(v.y))});ctx.strokeStyle='#177b60';ctx.lineWidth=2.5;ctx.lineJoin='round';ctx.stroke();values.forEach((v,i)=>{let xx=pad.l+step*i;ctx.beginPath();ctx.arc(xx,y(v.y),3.3,0,Math.PI*2);ctx.fillStyle='#177b60';ctx.fill()})}
+ else {let bw=Math.min(28,cw/values.length*.55);values.forEach((v,i)=>{let xx=pad.l+(i+.5)*cw/values.length;let yy=y(v.y);ctx.fillStyle='#177b60';ctx.beginPath();ctx.roundRect(xx-bw/2,yy,bw,pad.t+ch-yy,5);ctx.fill();ctx.textAlign='center';ctx.fillStyle='#818c85';ctx.fillText(v.x,xx,h-9)})}
+ if(kind==='price'){ctx.textAlign='left';ctx.fillStyle='#818c85';ctx.fillText(values[0].x,pad.l,h-9);ctx.textAlign='right';ctx.fillText(values.at(-1).x,w-pad.r,h-9)}}
+function drawCharts(){const chronological=sorted();draw('priceChart','priceEmpty',chronological.map(x=>({x:new Date(x.date+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'}),y:x.price})),'price');
+ const sums={};logs.forEach(x=>{let m=x.date.slice(0,7);sums[m]=(sums[m]||0)+x.total});let keys=Object.keys(sums).sort().slice(-6);draw('spendChart','spendEmpty',keys.map(k=>({x:new Date(k+'-15T12:00:00').toLocaleDateString('en-US',{month:'short'}),y:sums[k]})),'spend')}
+function openForm(item){$('entryForm').reset();$('entryId').value=item?.id||'';$('modalTitle').textContent=item?'Edit fill-up':'Add fill-up';$('date').value=item?.date||new Date().toISOString().slice(0,10);$('station').value=item?.station||'';$('gallonsInput').value=item?.gallons??'';$('priceInput').value=item?.price??'';$('odo').value=item?.odo??'';$('notes').value=item?.notes||'';updatePreview();$('entryDialog').showModal()}
+function updatePreview(){let t=(Number($('gallonsInput').value)||0)*(Number($('priceInput').value)||0);$('totalPreview').innerHTML=`Fill-up total: <b>${money(t)}</b>`}
+$('addBtn').onclick=()=>openForm();$('closeDialog').onclick=$('cancelBtn').onclick=()=>$('entryDialog').close();['gallonsInput','priceInput'].forEach(id=>$(id).addEventListener('input',updatePreview));
+$('entryForm').onsubmit=e=>{e.preventDefault();let g=Number($('gallonsInput').value),p=Number($('priceInput').value);if(!(g>0)||p<0)return;let id=$('entryId').value||crypto.randomUUID(),record={id,date:$('date').value,station:$('station').value.trim(),gallons:g,price:p,total:Math.round(g*p*100)/100,odo:$('odo').value===''?null:Number($('odo').value),notes:$('notes').value.trim()};let idx=logs.findIndex(x=>x.id===id);if(idx>=0)logs[idx]=record;else logs.push(record);save();$('entryDialog').close();render()};
+$('records').onclick=e=>{let del=e.target.closest('[data-delete]'),edit=e.target.closest('[data-edit]');if(del){if(confirm('Delete this fill-up record?')){logs=logs.filter(x=>x.id!==del.dataset.delete);save();render()}}if(edit){let item=logs.find(x=>x.id===edit.dataset.edit);if(item)openForm(item)}};
+$('search').oninput=render;$('period').onchange=render;window.addEventListener('resize',()=>drawCharts());
+$('exportBtn').onclick=()=>{const fields=['date','station','gallons','price','total','odo','notes'],quote=v=>'"'+String(v??'').replace(/"/g,'""')+'"';let csv=[fields.join(','),...logs.map(x=>fields.map(k=>quote(x[k])).join(','))].join('\r\n');let blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='fuel-logs.csv';a.click();URL.revokeObjectURL(url)};
+$('importFile').onchange=async e=>{let file=e.target.files[0];if(!file)return;try{let text=await file.text(),lines=text.trim().split(/\r?\n/);let parse=line=>{let out=[],s='',q=false;for(let i=0;i<line.length;i++){let c=line[i];if(c==='"'&&line[i+1]==='"'){s+='"';i++}else if(c==='"')q=!q;else if(c===','&&!q){out.push(s);s=''}else s+=c}out.push(s);return out};let heads=parse(lines.shift()).map(s=>s.trim().toLowerCase());let imported=lines.filter(Boolean).map(line=>{let cells=parse(line),o={};heads.forEach((k,i)=>o[k]=cells[i]);let g=Number(o.gallons),price=Number(o.price);if(!o.date||!(g>0)||!Number.isFinite(price))return null;return{id:crypto.randomUUID(),date:o.date,station:o.station||'',gallons:g,price,total:Number(o.total)||Math.round(g*price*100)/100,odo:o.odo===''||o.odo==null?null:Number(o.odo),notes:o.notes||''}}).filter(Boolean);if(!imported.length)throw Error('No valid rows found. Use a Fuel Log CSV export.');if(confirm(`Import ${imported.length} records? Existing entries will be kept.`)){logs.push(...imported);save();render();alert('Import complete.')}}catch(err){alert('Could not import CSV: '+err.message)}e.target.value=''};
+render();
+</script></body></html>
